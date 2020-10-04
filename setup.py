@@ -8,5 +8,5 @@ setup(
     author='Riccardo Isola',
     author_email='riky.isola@gmail.com',
     packages=find_packages(),
-    scripts=['scripts/ev3db'],
+    scripts=['ev3db-cli'],
 )
