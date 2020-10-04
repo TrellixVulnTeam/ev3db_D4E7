@@ -16,7 +16,7 @@ def setup():
                 'Type=simple\n' \
                 'User=robot\n' \
                 'WorkingDirectory=/home/robot\n' \
-                'ExecStart=/home/robot/ev3db-cli\n' \
+                'ExecStart=/home/robot/ev3db-cli --server\n' \
                 'Restart=on-failure\n' \
                 '[Install]\n' \
                 'WantedBy=multi-user.target'
