@@ -15,7 +15,7 @@ from threading import Thread
 import tarfile
 import ev3db.server._restful_server
 from ._restful_server import HttpCode
-local='ev3dev' not in Popen('uname -a', stdout=PIPE).stdout.read().decode()
+local='ev3dev' not in Popen(['uname','-a'], stdout=PIPE).stdout.read().decode()
 if not local:
     from ev3dev2.motor import Motor, OUTPUT_A, OUTPUT_B, OUTPUT_C, OUTPUT_D
     from ev3dev2.button import Button
