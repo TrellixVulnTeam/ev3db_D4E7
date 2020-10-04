@@ -3,12 +3,11 @@ from os import system
 
 def setup():
     if local:
-        commands=["sshpass -p 'maker' ssh robot@ev3dev.local '"
-                  "git clone https://github.com/RikyIsola/ev3db.git tmp && "
-                  "mv tmp/ev3db . && "
-                  "mv tmp/ev3db-cli . && "
-                  "rm -rf tmp && "
-                  "echo \"maker\" | sudo -S ./ev3db-cli --setup'"]
+        commands=["git clone https://github.com/RikyIsola/ev3db.git .tmp",
+                  "sshpass -p 'maker' scp .tmp/ev3db robot@ev3dev.local:~",
+                  "sshpass -p 'maker' scp .tmp/ev3db-cli robot@ev3dev.local:~",
+                  "sshpass -p 'maker' ssh robot@ev3dev.local 'echo \"maker\" | sudo -S ./ev3db-cli --setup'",
+                  "rm -rf .tmp"]
     else:
         systemd='[Unit]\n' \
                 'Description=EV3 debug bridge service\n' \
