@@ -3,7 +3,7 @@ from os import system
 
 def setup():
     if local:
-        commands=["sshpass -p 'maker' ssh '"
+        commands=["sshpass -p 'maker' ssh robot@ev3dev.local '"
                   "git clone https://github.com/RikyIsola/ev3db.git tmp && "
                   "mv tmp/ev3db . && "
                   "mv tmp/ev3db-cli . && "
