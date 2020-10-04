@@ -3,6 +3,7 @@ from io import StringIO
 from typing import Dict,Callable,Tuple
 from json import loads
 from traceback import format_exc,print_exc
+from os import system
 
 CONTENT_LENGTH='Content-Length'
 HTTP_CODES={200:'OK',404:'NOT_FOUND',500:'SERVER_ERROR'}
@@ -10,7 +11,12 @@ HTTP_CODES={200:'OK',404:'NOT_FOUND',500:'SERVER_ERROR'}
 def run(port:int,commands:Dict[Tuple[str,str],Callable]):
     server = socket(AF_INET, SOCK_STREAM)
     try:
-        server.bind(('0.0.0.0', port))
+        try:
+            server.bind(('0.0.0.0', port))
+        except OSError:
+            print_exc()
+            system('echo "maker" | sudo -S fuser -k 55555/tcp')
+            server.bind(('0.0.0.0', port))
         server.listen(1)
         while True:
             client, address = server.accept()
