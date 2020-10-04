@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+name=$(basename "$(dirname "$1")")
+curl -X POST -d "{\"name\":\"$name\"}" http://127.0.0.1:55555/run

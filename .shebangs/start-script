@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+name=$(basename "$1" .py)
+curl -X POST -d "{\"name\":\"$name\"}" http://127.0.0.1:55555/run

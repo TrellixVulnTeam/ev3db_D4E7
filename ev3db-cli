@@ -1,7 +1,6 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3 -u
 from argparse import ArgumentParser
 from sys import stderr
-from os.path import dirname,basename, abspath
 import ev3db.server
 from ev3db.client import push, install, interrupt, kill, is_alive,logs,errors
 from ev3db.server.setup import setup
@@ -28,17 +27,9 @@ def main():
     parser.add_argument('-d','--download-only',action='store_true',default=False,help='Download only the program')
     parser.add_argument('-r','--run-only', action='store_true', default=False, help='Run only the program')
     parser.add_argument('program', type=str,nargs='?', help='Download and run the given program',default=None)
-    parser.add_argument('--shebang',type=str,help='Used in scripts to make the program executable')
-    parser.add_argument('--shebang-module', type=str, help='Used in scripts to make the program executable')
     args = parser.parse_args()
-    if args.shebang is not None:
-        args.program=basename(dirname(abspath(args.shebang)))
-        args.run_only=True
-    if args.shebang_module:
-        args.program = basename(abspath(args.shebang_module))
-        args.run_only=True
     if args.program is not None:
-        ev3db.client.ev3run.run(args.program,args.url,args.download_only,args.run_only)
+        ev3db.client.ev3run.run(args.program,args.url,args.download_only)
     if args.errors:
         print(errors(args.url),file=stderr)
     if args.logs:

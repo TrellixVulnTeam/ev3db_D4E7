@@ -2,13 +2,12 @@ from ev3db import VERSION
 from ev3db.api import *
 from typing import Tuple,Union
 from base64 import b64decode
-from os import getcwd,kill,remove,makedirs,getpid,listdir
+from os import getcwd,kill,remove,makedirs,getpid,listdir,system
 from os.path import exists,join,basename
 from signal import SIGINT,SIGKILL
 from select import select
 import sys
 from importlib import import_module
-from importlib.util import find_spec
 from multiprocessing import Process
 from subprocess import Popen, PIPE
 from threading import Thread
@@ -32,15 +31,12 @@ processes=set()
 running=True
 OK='OK'
 Return=Union[str,Tuple[str,int]]
+input_lock=None
 
 def run(port:int=55555):
     global running
     print(' * Local mode:','on' if local else 'off')
     Thread(target=button_interrupt).start()
-    if local:
-        address='127.0.0.1'
-    else:
-        address='0.0.0.0'
     commands = {HELLO: hello,
                 PUSH:push,
                 INSTALL:install,
@@ -50,8 +46,11 @@ def run(port:int=55555):
                 IS_ALIVE:is_alive,
                 LOGS:logs,
                 ERRORS:errors}
-    ev3db.server._restful_server.run(port,commands)
-    running=False
+    try:
+        ev3db.server._restful_server.run(port,commands)
+    except BaseException as e:
+        running=False
+        raise e
 
 def button_interrupt():
     if local:
@@ -91,6 +90,7 @@ def install(name)-> Return:
     return package
 
 def run_module(name)->Return:
+    global input_lock
     module=name
     if not exists(module) and not exists(module+'.py'):
         raise HttpCode(404,'Program {} not found'.format(module))
@@ -107,6 +107,8 @@ def run_module(name)->Return:
         if should_remove:
             remove(get_log(pid,False))
             remove(get_log(pid,True))
+    if not local:
+        input_lock = Popen(['brickrun', 'sleep', 'infinity'])
     process=Process(target=start_module,args=(module,),name=module)
     process.start()
     Thread(target=handle_process, args=[process]).start()
@@ -118,6 +120,7 @@ def start_module(package:str):
     pid=getpid()
     sys.stdout = BufferedOut(open(get_log(pid,False), 'w'),sys.stdout)
     sys.stderr = BufferedOut(open(get_log(pid,True), 'w'),sys.stderr)
+    system('beep')
     module= import_module(package)
     if hasattr(module, '__main__') and callable(module.__main__):
         module.__main__()
@@ -134,6 +137,7 @@ def handle_process(process:Process):
     stop_all()
 
 def stop_all():
+    global input_lock
     if local:
         print('Stop all')
     else:
@@ -144,6 +148,9 @@ def stop_all():
                 motor.stop()
             except Exception:
                 pass
+        if input_lock is not None:
+            input_lock = None
+            input_lock.kill()
 
 
 class BufferedOut:

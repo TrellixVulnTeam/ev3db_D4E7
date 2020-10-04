@@ -29,7 +29,12 @@ def run(port:int,commands:Dict[Tuple[str,str],Callable]):
                 headers[line.split(' ')[0][:-1]] = line.split(' ')[1]
             if CONTENT_LENGTH in headers:
                 length = int(headers[CONTENT_LENGTH])
-                extra=stream.read(length)
+                extra=stream.read()
+                while len(extra)<length:
+                    buff_size=min(length-len(extra),1024)
+                    extra+=client.recv(buff_size).decode()
+                print(extra)
+                print('RECEIVED:',len(extra),'/',length)
                 extra = loads(extra)
             try:
                 result = commands[(path, method)](**extra)

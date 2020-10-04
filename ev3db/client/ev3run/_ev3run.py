@@ -7,22 +7,20 @@ from os import remove
 from os.path import basename
 import tarfile
 
-def run(program:str,url:str='ev3dev.local',download_only:bool=False,run_only:bool=False):
+def run(program:str,url:str='ev3dev.local',download_only:bool=False):
     target = program
     program = basename(program)
     if '.py' in program:
         program = program[:-3]
     file = program + '.ev3'
-    if not run_only:
-        with tarfile.open(file, 'w:gz') as f:
-            f.add(target, basename(target))
-        push(url, file)
-        remove(file)
-        install(url, file)
-        if download_only:
-            return
+    with tarfile.open(file, 'w:gz') as f:
+        f.add(target, basename(target))
+    push(url, file)
+    remove(file)
+    install(url, file)
+    if download_only:
+        return
     pid=ev3db.client.run(url,program)
-    url=url
     out_err=[0,0]
     try:
         while is_alive(url) == 'TRUE':
