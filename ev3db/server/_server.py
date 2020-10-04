@@ -130,14 +130,17 @@ def get_log(pid:int,err:bool)->str:
     return join('.logs', '{}_{}.txt'.format(pid,files[err]))
 
 def handle_process(process:Process):
+    global input_lock
     while running:
         process.join(1)
         if not process.is_alive():
             break
+    if input_lock is not None:
+        input_lock=None
+        input_lock.kill()
     stop_all()
 
 def stop_all():
-    global input_lock
     if local:
         print('Stop all')
     else:
@@ -148,9 +151,6 @@ def stop_all():
                 motor.stop()
             except Exception:
                 pass
-        if input_lock is not None:
-            input_lock = None
-            input_lock.kill()
 
 
 class BufferedOut:
