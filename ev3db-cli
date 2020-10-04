@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+from argparse import ArgumentParser
+from sys import stderr
+from os.path import dirname,basename, abspath
+import ev3db.server
+from ev3db.client import push, install, interrupt, kill, is_alive,logs,errors
+from ev3db.server.setup import setup
+import ev3db.client
+import ev3db.client.ev3run
+
+
+def main():
+    parser = ArgumentParser()
+    parser.add_argument('-p', '--push', type=str, help='Push the file on the target')
+    parser.add_argument('-i', '--install', type=str, help='Install a pushed program installer')
+    parser.add_argument('--run', type=str, help='Run an installed program')
+    parser.add_argument('--interrupt', nargs='?', type=int, const=-1, default=None,
+                        help='Interrupt the given pid or all')
+    parser.add_argument('-k', '--kill', nargs='?', type=int, const=-1, default=None, help='Kill the given pid or all')
+    parser.add_argument('-l','--logs',action='store_true',default=False,help='Show the stdout logs')
+    parser.add_argument('-e', '--errors', action='store_true', default=False, help='Show the stderr logs')
+    parser.add_argument('--is_alive', nargs='?', type=int, const=-1, default=None,
+                        help='Check if the given program is running or if any program is running')
+    parser.add_argument('-u','--url', type=str, help='The http url to connect to',default='http://ev3dev.local:55555')
+    parser.add_argument('-s','--server',action='store_true',default=False,help='Start an ev3db server')
+    parser.add_argument('--setup',action='store_true',default=False,help='Install the required packages on the ev3')
+    parser.add_argument('--port', default=55555, type=int, help='The port to start the server on')
+    parser.add_argument('-d','--download-only',action='store_true',default=False,help='Download only the program')
+    parser.add_argument('-r','--run-only', action='store_true', default=False, help='Run only the program')
+    parser.add_argument('program', type=str,nargs='?', help='Download and run the given program',default=None)
+    parser.add_argument('--shebang',type=str,help='Used in scripts to make the program executable')
+    parser.add_argument('--shebang-module', type=str, help='Used in scripts to make the program executable')
+    args = parser.parse_args()
+    if args.shebang is not None:
+        args.program=basename(dirname(abspath(args.shebang)))
+        args.run_only=True
+    if args.shebang_module:
+        args.program = basename(abspath(args.shebang_module))
+        args.run_only=True
+    if args.program is not None:
+        ev3db.client.ev3run.run(args.program,args.url,args.download_only,args.run_only)
+    if args.errors:
+        print(errors(args.url),file=stderr)
+    if args.logs:
+        print(logs(args.url))
+    if args.is_alive is not None:
+        print(is_alive(args.url, args.is_alive))
+    if args.interrupt is not None:
+        print(interrupt(args.url, args.interrupt))
+    if args.kill is not None:
+        print(kill(args.url, args.kill))
+    if args.push is not None:
+        print(push(args.url, args.push))
+    if args.install is not None:
+        print(install(args.url, args.install))
+    if args.run is not None:
+        print(ev3db.client.run(args.url, args.run))
+    if args.setup:
+        setup()
+    if args.server:
+        ev3db.server.run(args.port)
+
+
+if __name__ == '__main__':
+    main()
