@@ -1,5 +1,6 @@
-#!/usr/bin/env bash
-python setup.py sdist bdist_wheel && python3 -m twine upload dist/*
-rm -r build
-rm -r dist
-rm -r ev3db.egg-info
+python setup.py sdist bdist_wheel
+xclip -selection clipboard -i < pypi.txt
+python -m twine upload dist/*
+rm -rf build
+rm -rf dist
+rm -rf whatsappwebbot.egg-info

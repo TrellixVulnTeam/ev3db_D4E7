@@ -1,8 +1,12 @@
 from ev3db.server import local
 from os import system
+from os.path import exists
+from shutil import rmtree
 
 def setup():
     if local:
+        if exists('.tmp'):
+            rmtree('.tmp')
         commands=["git clone https://github.com/RikyIsola/ev3db.git .tmp",
                   "sshpass -p 'maker' scp -r .tmp/ev3db robot@ev3dev.local:~",
                   "sshpass -p 'maker' scp -r .tmp/.utils robot@ev3dev.local:~",

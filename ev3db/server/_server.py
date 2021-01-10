@@ -11,19 +11,23 @@ from importlib import import_module
 from multiprocessing import Process
 from subprocess import Popen, PIPE
 from threading import Thread
+from typing import Optional
+from time import time
 import tarfile
 import ev3db.server._restful_server
 from ._restful_server import HttpCode
 local='ev3dev' not in Popen(['uname','-a'], stdout=PIPE).stdout.read().decode()
 if not local:
-    from ev3dev2.motor import Motor, OUTPUT_A, OUTPUT_B, OUTPUT_C, OUTPUT_D
+    from ev3dev2.motor import Motor, OUTPUT_A, OUTPUT_B, OUTPUT_C, OUTPUT_D, DeviceNotDefined
     from ev3dev2.button import Button
 
     # Imports to speed up program startup
-    import ev3dev2.motor, ev3dev2.button, ev3dev2.wheel, ev3dev2.port, ev3dev2.display, ev3dev2.auto, ev3dev2.console,\
-        ev3dev2.led, ev3dev2.power, ev3dev2.sound, ev3dev2.stopwatch, ev3dev2.unit, ev3dev2.version,\
-        ev3dev2.sensor.lego
-    import time
+    CACHE_MODULES=['ev3dev2.motor', 'ev3dev2.button', 'ev3dev2.wheel', 'ev3dev2.port', 'ev3dev2.display',
+                   'ev3dev2.auto', 'ev3dev2.console', 'ev3dev2.led', 'ev3dev2.power', 'ev3dev2.sound',
+                   'ev3dev2.stopwatch', 'ev3dev2.unit', 'ev3dev2.version', 'ev3dev2.sensor.lego', 'ev3dev2.fonts',
+                   'traceback','time']
+    for cache_module in CACHE_MODULES:
+        import_module(cache_module)
 
 sys.path.append(getcwd())
 
@@ -31,7 +35,7 @@ processes=set()
 running=True
 OK='OK'
 Return=Union[str,Tuple[str,int]]
-input_lock=None
+input_lock=None  # type: Optional[Process]
 
 def run(port:int=55555):
     global running
@@ -69,6 +73,11 @@ def button_interrupt():
                 if button.backspace:
                     break
         send_signal(SIGINT, -1,False)
+        end=time()+3
+        while len(processes)>0:
+            update_processes()
+            if time()>end:
+                send_signal(SIGKILL,-1,False)
 
 def hello()->str:
     return 'ev3db {}'.format(VERSION)
@@ -136,8 +145,8 @@ def handle_process(process:Process):
         if not process.is_alive():
             break
     if input_lock is not None:
+        input_lock.terminate()
         input_lock=None
-        input_lock.kill()
     stop_all()
 
 def stop_all():
@@ -148,8 +157,8 @@ def stop_all():
         for output in outputs:
             try:
                 motor = Motor(output)
-                motor.stop()
-            except Exception:
+                motor.reset()
+            except DeviceNotDefined:
                 pass
 
 
@@ -189,7 +198,7 @@ def send_signal(signal:int,pid:int,exception:bool=True)-> Return:
         if pid==-1 or pid==process.pid:
             kill(process.pid, signal)
             ok=True
-    stop_all()
+    # stop_all()
     if not ok and exception:
         raise HttpCode(404,'Pid {} not found'.format(pid))
     return OK

@@ -1,4 +1,4 @@
-from socket import socket,AF_INET,SOCK_STREAM
+from socket import socket,AF_INET,SOCK_STREAM,SOL_SOCKET,SO_REUSEADDR
 from io import StringIO
 from typing import Dict,Callable,Tuple
 from json import loads
@@ -11,6 +11,7 @@ HTTP_CODES={200:'OK',404:'NOT_FOUND',500:'SERVER_ERROR'}
 def run(port:int,commands:Dict[Tuple[str,str],Callable]):
     server = socket(AF_INET, SOCK_STREAM)
     try:
+        server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
         try:
             server.bind(('0.0.0.0', port))
         except OSError:
